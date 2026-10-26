@@ -2,10 +2,8 @@
 
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import clsx from "clsx";
 import {
   ArrowRight,
-  Check,
   CheckCircle2,
   Eye,
   EyeOff,
@@ -13,9 +11,7 @@ import {
   Lock,
   Mail,
   ScanLine,
-  Shield,
   ShieldCheck,
-  Sparkles,
 } from "lucide-react";
 import { Logo } from "@/components/brand/Logo";
 import { CarIllustration } from "@/components/illustrations/CarIllustration";
@@ -80,16 +76,8 @@ export function LoginView() {
 
         {/* Center: Hero Heading + Animated Car Section */}
         <div className="relative z-10 my-10 max-w-xl lg:my-auto">
-          {/* Badge */}
-          <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3.5 py-1.5 backdrop-blur-md">
-            <Sparkles className="size-3.5 text-brand-400" />
-            <span className="text-xs font-semibold tracking-wide text-slate-200 uppercase">
-              {t.login.badge}
-            </span>
-          </div>
-
           {/* Large Headline */}
-          <h1 className="mt-6 text-4xl font-extrabold tracking-tight sm:text-5xl xl:text-6xl">
+          <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl xl:text-6xl">
             {t.login.headline1}{" "}
             <span className="text-brand-500">{t.login.headline2}</span>
           </h1>
@@ -157,51 +145,22 @@ export function LoginView() {
 
       {/* RIGHT COLUMN: Sign In Card Panel */}
       <section className="relative flex flex-1 flex-col justify-between bg-canvas px-4 py-8 sm:px-8 sm:py-12 lg:px-12 xl:px-16">
-        {/* Top bar with Inspector Portal pill and Language switcher */}
-        <div className="flex items-center justify-between sm:justify-end gap-3">
+        {/* Top bar with Language switcher */}
+        <div className="flex min-h-[36px] items-center justify-end">
           <div className="hidden sm:block">
             <LanguageSwitcher tone="light" />
-          </div>
-          <div className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3.5 py-1 text-xs font-bold text-emerald-700">
-            <ShieldCheck className="size-3.5" />
-            <span>{t.login.portal.toUpperCase()}</span>
           </div>
         </div>
 
         {/* Center: Login Form Card */}
         <div className="mx-auto my-auto w-full max-w-md py-8">
           <div className="card rounded-3xl p-6 sm:p-9 shadow-xl shadow-slate-900/5">
-            {/* Header Icon */}
-            <div className="grid size-12 place-items-center rounded-2xl bg-brand-50 text-brand-600 ring-4 ring-brand-50/50">
-              <Shield className="size-6" strokeWidth={2} />
-            </div>
-
-            <h2 className="mt-5 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
+            <h2 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
               {t.login.welcome}
             </h2>
             <p className="mt-1.5 text-xs text-slate-500 sm:text-sm">
               {t.login.welcomeSub}
             </p>
-
-            {/* Role indicator banner */}
-            <div className="mt-6 flex items-center justify-between rounded-xl border border-slate-200/80 bg-slate-50/80 px-4 py-3">
-              <div className="flex items-center gap-2.5">
-                <span className="grid size-6 place-items-center rounded-full bg-emerald-100 text-emerald-600">
-                  <Check className="size-3.5" strokeWidth={3} />
-                </span>
-                <div>
-                  <span className="block text-[11px] font-medium text-slate-400">
-                    {t.login.signingAs}
-                  </span>
-                  <span className="block text-xs font-bold text-slate-800">
-                    {t.common.vehicleInspector}
-                  </span>
-                </div>
-              </div>
-              <span className="rounded-full bg-white px-2.5 py-0.5 text-[10px] font-bold tracking-wider text-slate-500 uppercase border border-slate-200">
-                {t.login.staffOnly}
-              </span>
-            </div>
 
             {/* Form */}
             <form onSubmit={handleSubmit} className="mt-6 space-y-4">
@@ -284,22 +243,15 @@ export function LoginView() {
             </form>
           </div>
 
-          {/* Secure badge & Support note under the card */}
-          <div className="mt-5 space-y-2 text-center">
-            <p className="flex items-center justify-center gap-1.5 text-xs font-medium text-emerald-700">
-              <ShieldCheck className="size-3.5" />
-              <span>{t.login.secure}</span>
-            </p>
+          {/* Support note under the card */}
+          <div className="mt-5 text-center">
             <p className="text-xs text-slate-500">
               {t.login.needAccount}
             </p>
           </div>
         </div>
 
-        {/* Bottom copyright */}
-        <div className="py-2 text-center text-xs text-slate-400">
-          <p>© 2026 VehIRIS • {t.login.footer}</p>
-        </div>
+
       </section>
     </div>
   );

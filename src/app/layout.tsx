@@ -11,12 +11,19 @@ const jakarta = Plus_Jakarta_Sans({
 
 export const metadata: Metadata = {
   title: {
-    default: "VehIRIS — Vehicle Image Recognition & Inspection System",
+    default: "VehIRIS — Vehicle Inspection & Recognition System",
     template: "%s · VehIRIS",
   },
   description:
     "VehIRIS is an AI-assisted vehicle inspection workspace for rental operations: detect scratches and dents, keep inspectors in the loop, and generate digital reports.",
   applicationName: "VehIRIS",
+  icons: {
+    icon: [
+      { url: "/icon.png" },
+      { url: "/favicon.png", type: "image/png" },
+    ],
+    apple: "/apple-icon.png",
+  },
 };
 
 export const viewport: Viewport = {

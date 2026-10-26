@@ -1,7 +1,7 @@
 const en = {
   common: {
-    appTagline: "Vehicle Inspection AI",
-    fullTagline: "Image Recognition & Inspection System",
+    appTagline: "Vehicle Inspection & Recognition System",
+    fullTagline: "Vehicle Inspection & Recognition System",
     search: "Search inspections, vehicles...",
     inspector: "Inspector",
     vehicleInspector: "Vehicle Inspector",
@@ -58,7 +58,7 @@ const en = {
     remember: "Remember me",
     forgot: "Forgot password?",
     forgotHint: "Please contact your rental administrator to reset your password.",
-    submit: "Sign In as Inspector",
+    submit: "Sign In",
     signingIn: "Signing in...",
     secure: "Secure access for authorized inspection staff only.",
     needAccount: "Need an account? Contact your rental administrator.",
@@ -211,8 +211,8 @@ export type Dictionary = Widen<typeof en>;
 
 const id: Dictionary = {
   common: {
-    appTagline: "AI Inspeksi Kendaraan",
-    fullTagline: "Sistem Pengenalan Gambar & Inspeksi",
+    appTagline: "Sistem Inspeksi & Pengenalan Kendaraan",
+    fullTagline: "Sistem Inspeksi & Pengenalan Kendaraan",
     search: "Cari inspeksi, kendaraan...",
     inspector: "Inspektur",
     vehicleInspector: "Inspektur Kendaraan",
@@ -269,7 +269,7 @@ const id: Dictionary = {
     remember: "Ingat saya",
     forgot: "Lupa kata sandi?",
     forgotHint: "Silakan hubungi administrator rental untuk mengatur ulang kata sandi Anda.",
-    submit: "Masuk sebagai Inspektur",
+    submit: "Masuk",
     signingIn: "Sedang masuk...",
     secure: "Akses aman khusus untuk staf inspeksi resmi.",
     needAccount: "Butuh akun? Hubungi administrator rental Anda.",
