@@ -1,0 +1,133 @@
+@import "tailwindcss";
+
+/* ------------------------------------------------------------------
+   VehIRIS design tokens
+   ------------------------------------------------------------------ */
+@theme {
+  --font-sans: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
+
+  /* Brand red (from the VehiRIS logo) */
+  --color-brand-50: #fff1f2;
+  --color-brand-100: #fde3e5;
+  --color-brand-200: #fbc5c9;
+  --color-brand-300: #f4a3a8;
+  --color-brand-400: #ef6b74;
+  --color-brand-500: #ea2f3c;
+  --color-brand-600: #e11d2e;
+  --color-brand-700: #bd1424;
+  --color-brand-800: #9c1422;
+  --color-brand-900: #821622;
+
+  /* Dark "ink" surfaces used by the sidebar & login hero */
+  --color-ink-700: #2b3340;
+  --color-ink-800: #1d2430;
+  --color-ink-850: #171d28;
+  --color-ink-900: #121722;
+  --color-ink-950: #0c1018;
+
+  /* Light app surfaces */
+  --color-canvas: #f4f6f9;
+  --color-line: #e6e9ef;
+
+  --shadow-card: 0 1px 2px 0 rgb(16 24 40 / 0.04), 0 1px 3px 0 rgb(16 24 40 / 0.03);
+  --shadow-brand: 0 8px 20px -6px rgb(225 29 46 / 0.45);
+
+  --animate-fade-in: fade-in 0.35s ease-out both;
+  --animate-slide-up: slide-up 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-float: float 5s ease-in-out infinite;
+  --animate-scan: scan 2.8s ease-in-out infinite;
+  --animate-grow-y: grow-y 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-grow-x: grow-x 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
+
+  @keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes slide-up {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+  }
+  @keyframes scan {
+    0%, 100% { transform: translateX(-10%); opacity: 0; }
+    15%, 85% { opacity: 1; }
+    50% { transform: translateX(110%); }
+  }
+  @keyframes grow-y {
+    from { transform: scaleY(0); }
+    to { transform: scaleY(1); }
+  }
+  @keyframes grow-x {
+    from { transform: scaleX(0); }
+    to { transform: scaleX(1); }
+  }
+}
+
+@layer base {
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
+  body {
+    @apply bg-canvas font-sans text-slate-800 antialiased;
+  }
+  ::selection {
+    @apply bg-brand-100 text-brand-800;
+  }
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+}
+
+/* ------------------------------------------------------------------
+   Reusable component classes
+   ------------------------------------------------------------------ */
+@utility card {
+  @apply rounded-2xl border border-line bg-white shadow-card;
+}
+
+@utility btn {
+  @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition-all duration-200 focus-visible:outline-none focus-visible:ring-4 disabled:cursor-not-allowed disabled:opacity-60;
+}
+@utility btn-primary {
+  @apply btn bg-brand-600 text-white shadow-brand hover:bg-brand-700 focus-visible:ring-brand-200;
+}
+@utility btn-outline {
+  @apply btn border border-line bg-white text-slate-800 hover:border-slate-300 hover:bg-slate-50 focus-visible:ring-slate-200;
+}
+
+@utility field-label {
+  @apply mb-2 block text-[13px] font-semibold text-slate-700;
+}
+@utility field {
+  @apply w-full rounded-xl border border-line bg-white px-4 py-3 text-sm text-slate-800 placeholder:text-slate-400 transition outline-none hover:border-slate-300 focus:border-brand-400 focus:ring-4 focus:ring-brand-100;
+}
+
+@utility eyebrow {
+  @apply text-[11px] font-semibold tracking-[0.08em] text-slate-400 uppercase;
+}
+
+/* Subtle scrollbar */
+.scroll-thin {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(148 163 184 / 0.4) transparent;
+}
+
+/* Blueprint grid for the login hero */
+.bg-grid {
+  background-image:
+    linear-gradient(to right, rgb(255 255 255 / 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgb(255 255 255 / 0.05) 1px, transparent 1px);
+  background-size: 44px 44px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
