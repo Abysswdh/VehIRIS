@@ -1,22 +1,11 @@
 "use client";
 
 import { useEffect, useState, type ReactNode } from "react";
-import { useRouter } from "next/navigation";
 import { Sidebar } from "./Sidebar";
 import { Header } from "./Header";
-import { useSession } from "@/lib/app-state";
-import { useHydrated } from "@/lib/store";
 
 export function AppShell({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false);
-  const session = useSession();
-  const hydrated = useHydrated();
-  const router = useRouter();
-
-  // Mock auth guard: bounce to login when there is no session.
-  useEffect(() => {
-    if (hydrated && !session) router.replace("/login");
-  }, [hydrated, session, router]);
 
   // Lock body scroll while the mobile drawer is open.
   useEffect(() => {

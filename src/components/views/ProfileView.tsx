@@ -7,13 +7,15 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { Toggle } from "@/components/ui/Toggle";
 import { toast } from "@/components/ui/Toaster";
 import { useI18n } from "@/lib/i18n";
-import { initials, prefsStore, profileStore, usePrefs, useProfile } from "@/lib/app-state";
+import { initials } from "@/lib/app-state";
+import { useUserProfile } from "@/components/providers/ProfileProvider";
 
 export function ProfileView() {
   const { t } = useI18n();
-  const profile = useProfile();
-  const prefs = usePrefs();
+  const { profile, saveProfile, savePreferences } = useUserProfile();
+  const prefs = profile.preferences;
   const [tab, setTab] = useState("personal");
+  const [saving, setSaving] = useState(false);
 
   const tabs = [
     { key: "personal", label: t.profile.tabPersonal, icon: UserRound },
@@ -22,19 +24,20 @@ export function ProfileView() {
     { key: "preferences", label: t.profile.tabPreferences, icon: LayoutGrid },
   ];
 
-  const onSave = (e: FormEvent<HTMLFormElement>) => {
+  const onSave = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setSaving(true);
     const f = new FormData(e.currentTarget);
-    const fullName = String(f.get("fullName") || profile.fullName);
-    profileStore.set({
-      ...profile,
+    const fullName = String(f.get("fullName") || profile.fullName).trim();
+    const err = await saveProfile({
       fullName,
-      displayName: fullName.split(" ")[0],
-      email: String(f.get("email") || profile.email),
-      role: String(f.get("role") || profile.role),
-      company: String(f.get("company") || profile.company),
+      displayName: fullName.split(/\s+/)[0] || profile.displayName,
+      role: String(f.get("role") || profile.role).trim(),
+      company: String(f.get("company") || profile.company).trim(),
     });
-    toast(t.common.saved);
+    setSaving(false);
+    if (err) toast(err, "error");
+    else toast(t.common.saved);
   };
 
   return (
@@ -86,18 +89,25 @@ export function ProfileView() {
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
               {[
                 { name: "fullName", label: t.profile.fullName, value: profile.fullName },
-                { name: "email", label: t.profile.email, value: profile.email, type: "email" },
+                { name: "email", label: t.profile.email, value: profile.email, type: "email", disabled: true },
                 { name: "role", label: t.profile.role, value: profile.role },
                 { name: "company", label: t.profile.company, value: profile.company },
               ].map((f) => (
                 <div key={f.name}>
                   <label htmlFor={`profile-${f.name}`} className="field-label">{f.label}</label>
-                  <input id={`profile-${f.name}`} name={f.name} type={f.type ?? "text"} defaultValue={f.value} className="field" />
+                  <input
+                    id={`profile-${f.name}`}
+                    name={f.name}
+                    type={f.type ?? "text"}
+                    defaultValue={f.value}
+                    disabled={f.disabled}
+                    className={clsx("field", f.disabled && "cursor-not-allowed bg-slate-50 text-slate-500")}
+                  />
                 </div>
               ))}
             </div>
             <div className="mt-7 flex justify-end">
-              <button id="save-profile" type="submit" className="btn-primary h-11 px-6">
+              <button id="save-profile" type="submit" disabled={saving} className="btn-primary h-11 px-6">
                 <Check className="size-4" strokeWidth={2.5} /> {t.common.saveChanges}
               </button>
             </div>
@@ -117,7 +127,10 @@ export function ProfileView() {
                 id="email-notifications"
                 label={t.profile.emailNotif}
                 checked={prefs.emailNotifications}
-                onChange={(v) => prefsStore.set({ ...prefs, emailNotifications: v })}
+                onChange={async (v) => {
+                  const err = await savePreferences({ ...prefs, emailNotifications: v });
+                  if (err) toast(err, "error");
+                }}
               />
             </div>
           </section>

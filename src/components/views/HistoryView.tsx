@@ -10,21 +10,34 @@ import { StatCard } from "@/components/ui/StatCard";
 import { FindingsText, StatusPill, useTypeLabel } from "@/components/ui/Badges";
 import { toast } from "@/components/ui/Toaster";
 import { fmt, useI18n } from "@/lib/i18n";
-import { useInspections } from "@/lib/app-state";
-import { formatMonth, formatShortDate, historyTotals } from "@/lib/mock-data";
+import { formatMonth, formatShortDate } from "@/lib/mock-data";
+import type { HistoryData, InspectionRecord } from "@/lib/supabase/queries";
 
-export function HistoryView() {
+export function HistoryView({
+  inspections,
+  totals,
+}: {
+  inspections: InspectionRecord[];
+  totals: HistoryData["totals"];
+}) {
   const q = useSearchParams().get("q") ?? "";
   // Re-mount when the header search changes so the filter picks up the new query.
-  return <HistoryContent key={q} initialQuery={q} />;
+  return <HistoryContent key={q} initialQuery={q} inspections={inspections} totals={totals} />;
 }
 
-function HistoryContent({ initialQuery }: { initialQuery: string }) {
+function HistoryContent({
+  initialQuery,
+  inspections,
+  totals,
+}: {
+  initialQuery: string;
+  inspections: InspectionRecord[];
+  totals: HistoryData["totals"];
+}) {
   const { t, locale } = useI18n();
-  const inspections = useInspections();
   const typeLabel = useTypeLabel();
   const [query, setQuery] = useState(initialQuery);
-  const [month, setMonth] = useState("2026-10");
+  const [month, setMonth] = useState("all");
   const [status, setStatus] = useState("all");
 
   const monthOptions = useMemo(() => Array.from(new Set(inspections.map((i) => i.date.slice(0, 7)))).sort().reverse(), [inspections]);
@@ -56,10 +69,10 @@ function HistoryContent({ initialQuery }: { initialQuery: string }) {
       <PageHeader title={t.history.title} subtitle={t.history.sub} />
 
       <section className="grid grid-cols-2 gap-4 xl:grid-cols-4 xl:gap-5">
-        <StatCard size="md" label={t.history.total} value={historyTotals.total} />
-        <StatCard size="md" label={t.history.completed} value={historyTotals.completed} delay={60} />
-        <StatCard size="md" label={t.history.pending} value={historyTotals.pending} delay={120} />
-        <StatCard size="md" label={t.history.damage} value={historyTotals.damage} delay={180} />
+        <StatCard size="md" label={t.history.total} value={totals.total} />
+        <StatCard size="md" label={t.history.completed} value={totals.completed} delay={60} />
+        <StatCard size="md" label={t.history.pending} value={totals.pending} delay={120} />
+        <StatCard size="md" label={t.history.damage} value={totals.damage} delay={180} />
       </section>
 
       {/* Filters */}
@@ -102,7 +115,7 @@ function HistoryContent({ initialQuery }: { initialQuery: string }) {
       {/* Table */}
       <section className="card mt-5 animate-slide-up p-5 sm:p-6" style={{ animationDelay: "80ms" }}>
         <h2 className="text-lg font-bold text-slate-900">{t.history.all}</h2>
-        <p className="mt-1 text-xs text-slate-500">{fmt(t.history.showing, { n: rows.length, total: historyTotals.total })}</p>
+        <p className="mt-1 text-xs text-slate-500">{fmt(t.history.showing, { n: rows.length, total: totals.total })}</p>
 
         <div className="scroll-thin mt-5 overflow-x-auto">
           <table className="w-full min-w-[760px] text-sm">

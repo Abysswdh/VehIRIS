@@ -8,11 +8,11 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { StatCard } from "@/components/ui/StatCard";
 import { FindingsPill, useTypeLabel } from "@/components/ui/Badges";
 import { useI18n } from "@/lib/i18n";
-import { useInspections } from "@/lib/app-state";
-import { activity, damageBreakdown, formatShortDate } from "@/lib/mock-data";
+import { formatShortDate } from "@/lib/mock-data";
+import type { DashboardData, InspectionRecord } from "@/lib/supabase/queries";
 import { useClickOutside } from "@/lib/use-click-outside";
 
-export function DashboardView() {
+export function DashboardView({ data }: { data: DashboardData }) {
   const { t } = useI18n();
 
   return (
@@ -29,30 +29,30 @@ export function DashboardView() {
       />
 
       <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4 xl:gap-5">
-        <StatCard icon={CarFront} label={t.dashboard.totalVehicles} value={128} hint={t.dashboard.totalVehiclesHint} hintTone="positive" delay={0} />
-        <StatCard icon={ScanLine} label={t.dashboard.inspectionsToday} value={24} hint={t.dashboard.inspectionsTodayHint} delay={60} />
-        <StatCard icon={TriangleAlert} iconTone="red" label={t.dashboard.damageDetected} value={17} hint={t.dashboard.damageDetectedHint} delay={120} />
-        <StatCard icon={FileText} label={t.dashboard.reportsGenerated} value={96} hint={t.dashboard.reportsGeneratedHint} hintTone="positive" delay={180} />
+        <StatCard icon={CarFront} label={t.dashboard.totalVehicles} value={data.stats.totalVehicles} hint={t.dashboard.totalVehiclesHint} hintTone="positive" delay={0} />
+        <StatCard icon={ScanLine} label={t.dashboard.inspectionsToday} value={data.stats.inspectionsToday} hint={t.dashboard.inspectionsTodayHint} delay={60} />
+        <StatCard icon={TriangleAlert} iconTone="red" label={t.dashboard.damageDetected} value={data.stats.damageDetected} hint={t.dashboard.damageDetectedHint} delay={120} />
+        <StatCard icon={FileText} label={t.dashboard.reportsGenerated} value={data.stats.reportsGenerated} hint={t.dashboard.reportsGeneratedHint} hintTone="positive" delay={180} />
       </section>
 
       <section className="mt-5 grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
-        <ActivityChart />
-        <DamageBreakdown />
+        <ActivityChart activity={data.activity} />
+        <DamageBreakdown breakdown={data.damageBreakdown} />
       </section>
 
-      <RecentInspections />
+      <RecentInspections rows={data.recentInspections} />
     </>
   );
 }
 
-function ActivityChart() {
+function ActivityChart({ activity }: { activity: DashboardData["activity"] }) {
   const { t } = useI18n();
   const [period, setPeriod] = useState<"week" | "month">("week");
   const [menu, setMenu] = useState(false);
   const menuRef = useClickOutside<HTMLDivElement>(() => setMenu(false), menu);
   const data = activity[period];
-  const max = Math.max(...data.map((d) => d.value));
-  const scaleMax = Math.ceil((max * 1.1) / 10) * 10;
+  const max = Math.max(1, ...data.map((d) => d.value));
+  const scaleMax = Math.max(1, Math.ceil((max * 1.1) / 5) * 5);
   const label = (key: string) =>
     period === "week" ? t.dashboard.days[key as keyof typeof t.dashboard.days] : t.dashboard.weeks[key as keyof typeof t.dashboard.weeks];
 
@@ -133,11 +133,11 @@ function ActivityChart() {
   );
 }
 
-function DamageBreakdown() {
+function DamageBreakdown({ breakdown }: { breakdown: DashboardData["damageBreakdown"] }) {
   const { t } = useI18n();
   const rows = [
-    { label: t.dashboard.scratch, value: damageBreakdown.scratch, color: "bg-brand-600" },
-    { label: t.dashboard.dent, value: damageBreakdown.dent, color: "bg-brand-300" },
+    { label: t.dashboard.scratch, value: breakdown.scratch, color: "bg-brand-600" },
+    { label: t.dashboard.dent, value: breakdown.dent, color: "bg-brand-300" },
   ];
   return (
     <div className="card flex animate-slide-up flex-col p-5 sm:p-6" style={{ animationDelay: "180ms" }}>
@@ -167,11 +167,9 @@ function DamageBreakdown() {
   );
 }
 
-function RecentInspections() {
+function RecentInspections({ rows }: { rows: InspectionRecord[] }) {
   const { t, locale } = useI18n();
-  const inspections = useInspections();
   const typeLabel = useTypeLabel();
-  const rows = inspections.slice(0, 5);
 
   return (
     <section className="card mt-5 animate-slide-up p-5 sm:p-6" style={{ animationDelay: "240ms" }}>

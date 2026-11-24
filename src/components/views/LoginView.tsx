@@ -18,19 +18,19 @@ import { CarIllustration } from "@/components/illustrations/CarIllustration";
 import { LanguageSwitcher } from "@/components/ui/LanguageSwitcher";
 import { toast } from "@/components/ui/Toaster";
 import { useI18n } from "@/lib/i18n";
-import { sessionStore } from "@/lib/app-state";
+import { createClient } from "@/lib/supabase/client";
 
 export function LoginView() {
   const { t } = useI18n();
   const router = useRouter();
 
-  const [email, setEmail] = useState("inspector@vehiris.com");
-  const [password, setPassword] = useState("password123");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!email || !email.includes("@")) {
       toast(t.login.errEmail, "error");
@@ -42,11 +42,18 @@ export function LoginView() {
     }
 
     setLoading(true);
-    window.setTimeout(() => {
-      sessionStore.set({ email });
-      toast(t.login.welcome);
-      router.push("/dashboard");
-    }, 700);
+    const supabase = createClient();
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+
+    if (error) {
+      toast(error.message, "error");
+      setLoading(false);
+      return;
+    }
+
+    toast(t.login.welcome);
+    router.push("/dashboard");
+    router.refresh();
   };
 
   const handleForgot = () => {

@@ -8,11 +8,14 @@ import { ArrowRight, Check, ChevronDown, ImagePlus, Loader2, ShieldCheck, Upload
 import { PageHeader } from "@/components/ui/PageHeader";
 import { toast } from "@/components/ui/Toaster";
 import { fmt, useI18n } from "@/lib/i18n";
-import { inspectionsStore, nextInspectionId } from "@/lib/app-state";
-import { vehicles, type InspectionType } from "@/lib/mock-data";
+import type { InspectionType } from "@/lib/mock-data";
+import type { VehicleRecord } from "@/lib/supabase/queries";
+import { createClient } from "@/lib/supabase/client";
+import { useUserProfile } from "@/components/providers/ProfileProvider";
 
 interface Photo {
   id: number;
+  file: File;
   url: string;
   name: string;
 }
@@ -20,12 +23,19 @@ interface Photo {
 const MAX_BYTES = 10 * 1024 * 1024;
 const ACCEPTED = ["image/jpeg", "image/png"];
 
-export function NewInspectionView() {
+function currentLocalDateTime() {
+  const now = new Date();
+  const offsetMs = now.getTimezoneOffset() * 60_000;
+  return new Date(now.getTime() - offsetMs).toISOString().slice(0, 16);
+}
+
+export function NewInspectionView({ vehicles }: { vehicles: VehicleRecord[] }) {
   const { t } = useI18n();
   const router = useRouter();
+  const { profile } = useUserProfile();
 
-  const [vehicle, setVehicle] = useState(`${vehicles[0].model}|${vehicles[0].plate}`);
-  const [date, setDate] = useState("2026-10-26T10:42");
+  const [vehicleId, setVehicleId] = useState(vehicles[0]?.id ?? "");
+  const [date, setDate] = useState(currentLocalDateTime);
   const [type, setType] = useState<InspectionType>("return");
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [dragging, setDragging] = useState(false);
@@ -45,7 +55,10 @@ export function NewInspectionView() {
     const valid = list.filter((f) => ACCEPTED.includes(f.type) && f.size <= MAX_BYTES);
     if (valid.length < list.length) toast(t.newInspection.invalidFile, "error");
     if (!valid.length) return;
-    setPhotos((prev) => [...prev, ...valid.map((f) => ({ id: ++idRef.current, url: URL.createObjectURL(f), name: f.name }))]);
+    setPhotos((prev) => [
+      ...prev,
+      ...valid.map((f) => ({ id: ++idRef.current, file: f, url: URL.createObjectURL(f), name: f.name })),
+    ]);
   };
 
   const removePhoto = (id: number) =>
@@ -67,25 +80,67 @@ export function NewInspectionView() {
     if (!analyzing && e.dataTransfer.files?.length) addFiles(e.dataTransfer.files);
   };
 
-  const step1Done = Boolean(vehicle && date);
+  const step1Done = Boolean(vehicleId && date);
   const step2Done = photos.length > 0;
   const currentStep = analyzing ? 3 : !step1Done ? 1 : !step2Done ? 2 : 3;
 
-  const analyze = () => {
-    if (!vehicle) return toast(t.newInspection.needVehicle, "error");
+  const analyze = async () => {
+    if (!vehicleId) return toast(t.newInspection.needVehicle, "error");
     if (!photos.length) return toast(t.newInspection.needPhotos, "error");
     setAnalyzing(true);
-    window.setTimeout(() => {
-      const [model, plate] = vehicle.split("|");
-      const list = inspectionsStore.get();
-      const id = nextInspectionId(list);
-      inspectionsStore.set([
-        { id, vehicle: model, plate, date, type, findings: Math.floor(Math.random() * 3), status: "pending" },
-        ...list,
-      ]);
-      toast(fmt(t.newInspection.queued, { id }));
+
+    try {
+      const supabase = createClient();
+
+      // 1. Create inspection record in Postgres
+      const { data: inspection, error: insErr } = await supabase
+        .from("inspections")
+        .insert({
+          vehicle_id: vehicleId,
+          inspector_id: profile.id,
+          inspected_at: new Date(date).toISOString(),
+          type,
+          status: "pending",
+        })
+        .select("id, code")
+        .single();
+
+      if (insErr || !inspection) {
+        throw new Error(insErr?.message ?? "Failed to create inspection");
+      }
+
+      // 2. Upload photos to Supabase Storage & save metadata rows
+      const uploadedRows: { inspection_id: string; storage_path: string; original_name: string }[] = [];
+      for (const p of photos) {
+        const ext = p.file.type === "image/png" ? "png" : "jpg";
+        const storagePath = `${inspection.id}/${crypto.randomUUID()}.${ext}`;
+        const { error: uploadErr } = await supabase.storage
+          .from("inspection-photos")
+          .upload(storagePath, p.file, { contentType: p.file.type });
+
+        if (uploadErr) throw new Error(uploadErr.message);
+        uploadedRows.push({
+          inspection_id: inspection.id,
+          storage_path: storagePath,
+          original_name: p.name,
+        });
+      }
+
+      const { error: photoMetaErr } = await supabase
+        .from("inspection_photos")
+        .insert(uploadedRows);
+      if (photoMetaErr) throw new Error(photoMetaErr.message);
+
+      // 3. Trigger AI analysis endpoint (stubbed until AI_SERVICE_URL is configured)
+      await fetch(`/api/inspections/${inspection.id}/analyze`, { method: "POST" });
+
+      toast(fmt(t.newInspection.queued, { id: inspection.code }));
       router.push("/inspections");
-    }, 2200);
+      router.refresh();
+    } catch (err) {
+      toast(err instanceof Error ? err.message : "Failed to save inspection", "error");
+      setAnalyzing(false);
+    }
   };
 
   const steps = [t.newInspection.step1, t.newInspection.step2, t.newInspection.step3];
@@ -139,14 +194,14 @@ export function NewInspectionView() {
               <div className="relative">
                 <select
                   id="vehicle"
-                  value={vehicle}
-                  onChange={(e) => setVehicle(e.target.value)}
+                  value={vehicleId}
+                  onChange={(e) => setVehicleId(e.target.value)}
                   disabled={analyzing}
                   className="field appearance-none pr-10"
                 >
                   <option value="" disabled>{t.newInspection.selectVehicle}</option>
                   {vehicles.map((v) => (
-                    <option key={v.plate} value={`${v.model}|${v.plate}`}>
+                    <option key={v.id} value={v.id}>
                       {v.model} • {v.plate}
                     </option>
                   ))}

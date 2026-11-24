@@ -8,13 +8,15 @@ import { Bell, ChevronDown, FileText, LogOut, Menu, Search, TriangleAlert, UserR
 import { Logo } from "@/components/brand/Logo";
 import { LanguageSwitcher } from "@/components/ui/LanguageSwitcher";
 import { useI18n } from "@/lib/i18n";
-import { initials, sessionStore, unreadStore, useProfile, useUnread } from "@/lib/app-state";
+import { initials, unreadStore, useUnread } from "@/lib/app-state";
+import { useUserProfile } from "@/components/providers/ProfileProvider";
+import { createClient } from "@/lib/supabase/client";
 import { useClickOutside } from "@/lib/use-click-outside";
 
 export function Header({ onMenu }: { onMenu: () => void }) {
   const { t } = useI18n();
   const router = useRouter();
-  const profile = useProfile();
+  const { profile } = useUserProfile();
   const unread = useUnread();
   const [query, setQuery] = useState("");
   const [notifOpen, setNotifOpen] = useState(false);
@@ -160,9 +162,11 @@ export function Header({ onMenu }: { onMenu: () => void }) {
               </Link>
               <button
                 type="button"
-                onClick={() => {
-                  sessionStore.set(null);
+                onClick={async () => {
+                  const supabase = createClient();
+                  await supabase.auth.signOut();
                   router.push("/login");
+                  router.refresh();
                 }}
                 className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-sm text-brand-600 transition hover:bg-brand-50"
               >

@@ -6,7 +6,7 @@ import clsx from "clsx";
 import { Clock3, LayoutGrid, LogOut, ScanLine, UserRound, X } from "lucide-react";
 import { Logo } from "@/components/brand/Logo";
 import { useI18n } from "@/lib/i18n";
-import { sessionStore } from "@/lib/app-state";
+import { createClient } from "@/lib/supabase/client";
 
 export const navItems = [
   { href: "/dashboard", key: "dashboard", icon: LayoutGrid },
@@ -25,9 +25,11 @@ export function Sidebar({ open, onClose }: SidebarProps) {
   const router = useRouter();
   const { t } = useI18n();
 
-  const signOut = () => {
-    sessionStore.set(null);
+  const signOut = async () => {
+    const supabase = createClient();
+    await supabase.auth.signOut();
     router.push("/login");
+    router.refresh();
   };
 
   return (
