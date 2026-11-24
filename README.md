@@ -7,7 +7,7 @@
 </p>
 
 <p align="center">
-  <strong>AI-Assisted Vehicle Inspection &amp; Damage Detection Workspace</strong>
+  <strong>Vehicle Image Recognition and Inspection System</strong>
 </p>
 
 ---
